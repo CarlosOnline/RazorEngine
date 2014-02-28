@@ -1,0 +1,28 @@
+﻿USE [master]
+GO
+
+IF EXISTS(select * from sys.databases where name='@(Model.Name)')
+BEGIN
+    ALTER DATABASE [@(Model.Name)] SET SINGLE_USER WITH ROLLBACK IMMEDIATE
+    DROP DATABASE [@(Model.Name)]
+END
+GO
+
+CREATE DATABASE [@(Model.Name)]
+ CONTAINMENT = NONE
+ ON  PRIMARY 
+    ( NAME = N'@(Model.Name)', FILENAME = N'c:\MSSQL\DATA\@(Model.Name).mdf' , SIZE = 17090560KB , MAXSIZE = UNLIMITED, FILEGROWTH = 1024KB )
+ LOG ON 
+    ( NAME = N'@(Model.Name)_log', FILENAME = N'c:\MSSQL\DATA\@(Model.Name)_log.ldf' , SIZE = 4632576KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)
+GO
+
+IF OBJECT_ID('@Model.Table', 'U') IS NOT NULL
+    DROP TABLE [@Model.Table];
+
+CREATE TABLE [@Model.Table] (
+    Id int IDENTITY (1, 1) NOT NULL
+    @foreach(var field in Model.Columns)
+    {
+    @:, [@field.Name] nvarchar(20) NULL
+    }
+)
